@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="ku">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurd Forum & Chat</title>
+    
+    <link rel="icon" type="image/jpeg" href="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/beee0e21-2922-47e1-b70f-001dd1ad0a17/dk5gtc4-d244edf7-b16e-43e8-b2bf-620f18ac998a.jpg/v1/fill/w_883,h_905,q_70,strp/kurden_nasyonalist_logo_by_pictureacc235_dk5gtc4-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9OTg1IiwicGF0aCI6Ii9mL2JlZWUwZTIxLTI5MjItNDdlMS1iNzBmLTAwMWRkMWFkMGExNy9kazVndGM0LWQyNDRlZGY3LWIxNmUtNDNlOC1iMmJmLTYyMGYxOGFjOTk4YS5qcGciLCJ3aWR0aCI6Ijw9OTYwIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.JBlSb1olUBFRBqzMmEfov0-ufEzYfIEiqevlbdDREGo">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #f59e0b; 
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --admin-color: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- NAVİGASYON --- */
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .logo-area img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-color);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .lang-select {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            outline: none;
+            font-weight: 600;
+        }
+
+        .profile-trigger {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .profile-trigger img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--accent-color);
+        }
+
+        /* --- ANA PANEL --- */
+        .main-content {
+            max-width: 1200px;
+            margin: 90px auto 2rem auto;
+            padding: 0 2rem;
+            display: none;
+        }
+
+        /* --- DUYURULAR --- */
+        .announcement-box {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .announcement-box h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .announcement-box p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .admin-controls {
+            display: none;
+            margin-top: 1rem;
+            gap: 10px;
+        }
+
+        .admin-controls input {
+            flex: 1;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 0.4rem;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .admin-controls button {
+            background: var(--accent-color);
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* --- FORUM & PAYLAŞIM ALANI --- */
+        .forum-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .post-creator {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .post-creator textarea {
+            width: 100%;
+            height: 80px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: white;
+            resize: none;
+            outline: none;
+        }
+
+        .post-creator button {
+            align-self: flex-end;
+            background: var(--accent-color);
+            border: none;
+            padding: 0.6rem 1.5rem;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .posts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .post-card {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0.5rem;
+        }
+
+        .post-header img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .post-header .username {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .post-header .badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .badge-admin { background: var(--admin-color); color: white; }
+        .badge-user { background: var(--border-color); color: var(--text-muted); }
+
+        /* --- ENTEGRE GİRİŞ VE KAYIT PANELİ --- */
+        .auth-container {
+            max-width: 400px;
+            margin: 120px auto;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 2.5rem 2rem;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .auth-tab {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .auth-tab.active {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .auth-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-input-group input {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .auth-input-group input:focus { border-color: var(--accent-color); }
+
+        .auth-btn {
+            background: var(--accent-color);
+            color: black;
+            border: none;
+            padding: 0.75rem;
+            width: 100%;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* --- PROFİL EDİTÖRÜ MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .profile-modal {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            width: 90%;
+            max-width: 450px;
+            padding: 2rem;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: none; border: none; color: white;
+            font-size: 1.2rem; cursor: pointer;
+        }
+
+        .avatar-preview-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .avatar-preview-area img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-color);
+        }
+
+        /* Gizli dosya inputu için şık buton tasarımı */
+        .file-upload-btn {
+            background: #334155;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        /* --- CANLI CHAT PENCERESİ --- */
+        .chat-toggle-btn {
+            position: fixed;
+            bottom: 25px; right: 25px;
+            background-color: var(--accent-color);
+            color: #000; width: 60px; height: 60px; border-radius: 50%;
+            display: none; justify-content: center; align-items: center;
+            font-size: 1.5rem; cursor: pointer; z-index: 1500; border: none;
+        }
+
+        .chat-container {
+            position: fixed;
+            bottom: 95px; right: 25px;
+            width: 360px; height: 450px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px; display: none;
+            flex-direction: column; z-index: 1500; overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: #111827; padding: 1rem;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .chat-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; }
+        .msg-bubble { background-color: var(--bg-color); padding: 0.5rem 0.75rem; border-radius: 8px; max-width: 85%; font-size: 0.9rem; border-left: 3px solid var(--accent-color); }
+        .msg-user { font-weight: 700; font-size: 0.75rem; color: var(--accent-color); margin-bottom: 2px; }
+        .chat-input-area { display: flex; padding: 0.75rem; background-color: #111827; border-top: 1px solid var(--border-color); gap: 8px; }
+        .chat-input-area input { flex: 1; background-color: var(--bg-color); border: 1px solid var(--border-color); color: white; padding: 0.5rem; border-radius: 6px; outline: none; }
+        .chat-input-area button { background-color: var(--accent-color); border: none; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="#" class="logo-area">
+                <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/beee0e21-2922-47e1-b70f-001dd1ad0a17/dk5gtc4-d244edf7-b16e-43e8-b2bf-620f18ac998a.jpg/v1/fill/w_883,h_905,q_70,strp/kurden_nasyonalist_logo_by_pictureacc235_dk5gtc4-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9OTg1IiwicGF0aCI6Ii9mL2JlZWUwZTIxLTI5MjItNDdlMS1iNzBmLTAwMWRkMWFkMGExNy9kazVndGM0LWQyNDRlZGY3LWIxNmUtNDNlOC1iMmJmLTYyMGYxOGFjOTk4YS5qcGciLCJ3aWR0aCI6Ijw9OTYwIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.JBlSb1olUBFRBqzMmEfov0-ufEzYfIEiqevlbdDREGo" alt="Logo">
+                <span>Kurd Forum</span>
+            </a>
+            
+            <div class="nav-right">
+                <button class="profile-trigger" id="profileBtn" onclick="openProfileModal()">
+                    <img id="navAvatar" src="https://www.w3schools.com/howto/img_avatar.png" alt="Avatar">
+                    <span id="navUsername">User</span>
+                </button>
+                <select class="lang-select" id="langSelect" onchange="changeLanguage()">
+                    <option value="ku" selected>Kurdî</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <div class="auth-container" id="authSection">
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Têkeve / Login</button>
+            <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Tomar bibe / Register</button>
+        </div>
+        
+        <h2 id="authTitle" style="margin-bottom: 1.5rem; font-size: 1.4rem;">Têkeve Forumê</h2>
+        
+        <div class="auth-input-group">
+            <input type="text" id="authUsername" placeholder="Navê Bikarhêner / Username">
+            <input type="password" id="authPassword" placeholder="Şîfre / Password">
+        </div>
+        <button class="auth-btn" id="authBtn" onclick="handleAuthSubmit()">Girin / Login</button>
+    </div>
+
+    <main class="main-content" id="mainSection">
+        
+        <div class="announcement-box">
+            <h3><i class="fa-solid fa-bullhorn text-amber-500"></i> <span id="annTitle">Daxuyanî / Announcement</span></h3>
+            <p id="announcementText">Bi xêr hatin forumê! / Welcome to the forum!</p>
+            <div class="admin-controls" id="adminAnnounceArea">
+                <input type="text" id="newAnnInput" placeholder="Duyuruyu Güncelle...">
+                <button onclick="updateAnnouncement()">Rojane bike</button>
+            </div>
+        </div>
+
+        <div class="forum-section">
+            <div class="post-creator">
+                <textarea id="postInput" placeholder="Tiştekî binivîsîne... / Write something..."></textarea>
+                <button id="shareBtn" onclick="createPost()">Parve Bike</button>
+            </div>
+            <div class="posts-list" id="forumPosts"></div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="profileModal">
+        <div class="profile-modal">
+            <button class="modal-close" onclick="closeProfileModal()"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-bottom: 1.5rem;" id="modalTitle">Hesabê Biguhêre</h3>
+            
+            <div class="avatar-preview-area">
+                <img id="modalAvatarPreview" src="https://www.w3schools.com/howto/img_avatar.png" alt="Preview">
+                <label class="file-upload-btn">
+                    <i class="fa-solid fa-image"></i> Wêne Hilbijêre / Choose File
+                    <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="previewFileAvatar(this)">
+                </label>
+            </div>
+
+            <div class="auth-input-group">
+                <label style="font-size: 0.85rem; color: var(--text-muted);" id="lblPass">Ji bo pejirandinê şîfreya xwe binivîse:</label>
+                <input type="password" id="profileVerifyPassword" placeholder="Şîfreya Te / Password">
+            </div>
+            <button class="auth-btn" id="saveProfileBtn" onclick="saveProfileChanges()">Paşve bide / Save</button>
+        </div>
+    </div>
+
+    <button class="chat-toggle-btn" id="chatToggle" onclick="toggleChat()">
+        <i class="fa-regular fa-comment-dots"></i>
+    </button>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <h4><i class="fa-solid fa-circle" style="color: #22c55e; font-size: 0.7rem;"></i> Canlı Chat</h4>
+            <button style="background:none; border:none; color:white; cursor:pointer;" onclick="toggleChat()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Peyam..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+            <button onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+        // --- FIREBASE TANIMLARI ---
+        const firebaseConfig = {
+            databaseURL: "https://kurd-352da-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        const chatRef = database.ref("messages");
+        const postsRef = database.ref("posts");
+        const usersRef = database.ref("users");
+        const annRef = database.ref("announcement");
+
+        let userData = null;
+        let currentLang = "ku";
+        let authMode = "login"; // 'login' veya 'register'
+        let tempBase64Avatar = ""; // Dosyadan seçilen resmin geçici verisi
+
+        // --- DİL ÇEVİRİSİ ---
+        const languages = {
+            ku: {
+                titleLogin: "Têkeve Forumê",
+                titleRegister: "Hesabê Nû Ava Bike",
+                authBtnLogin: "Girin",
+                authBtnRegister: "Tomar bibe",
+                shareBtn: "Parve Bike",
+                annTitle: "Daxuyanî",
+                modalTitle: "Hesabê Biguhêre",
+                lblPass: "Ji bo pejirandinê şîfreya xwe binivîse:",
+                saveProfileBtn: "Paşve bide",
+                postPlaceholder: "Tiştekî binivîsîne...",
+                chatPlaceholder: "Peyam..."
+            },
+            en: {
+                titleLogin: "Login to Forum",
+                titleRegister: "Create New Account",
+                authBtnLogin: "Login",
+                authBtnRegister: "Register",
+                shareBtn: "Share",
+                annTitle: "Announcement",
+                modalTitle: "Edit Profile",
+                lblPass: "Enter password to verify changes:",
+                saveProfileBtn: "Save Changes",
+                postPlaceholder: "Write something...",
+                chatPlaceholder: "Message..."
+            }
+        };
+
+        function changeLanguage() {
+            currentLang = document.getElementById("langSelect").value;
+            const trans = languages[currentLang];
+            
+            document.getElementById("authTitle").innerText = authMode === "login" ? trans.titleLogin : trans.titleRegister;
+            document.getElementById("authBtn").innerText = authMode === "login" ? trans.authBtnLogin : trans.authBtnRegister;
+            document.getElementById("shareBtn").innerText = trans.shareBtn;
+            document.getElementById("annTitle").innerText = trans.annTitle;
+            document.getElementById("modalTitle").innerText = trans.modalTitle;
+            document.getElementById("lblPass").innerText = trans.lblPass;
+            document.getElementById("saveProfileBtn").innerText = trans.saveProfileBtn;
+            document.getElementById("postInput").placeholder = trans.postPlaceholder;
+            document.getElementById("chatInput").placeholder = trans.chatPlaceholder;
+        }
+
+        // --- GİRİŞ / KAYIT SEKME GEÇİŞİ ---
+        function switchAuthTab(mode) {
+            authMode = mode;
+            const trans = languages[currentLang];
+            
+            document.getElementById("tabLogin").classList.remove("active");
+            document.getElementById("tabRegister").classList.remove("active");
+            
+            if(mode === 'login') {
+                document.getElementById("tabLogin").classList.add("active");
+                document.getElementById("authTitle").innerText = trans.titleLogin;
+                document.getElementById("authBtn").innerText = trans.authBtnLogin;
+            } else {
+                document.getElementById("tabRegister").classList.add("active");
+                document.getElementById("authTitle").innerText = trans.titleRegister;
+                document.getElementById("authBtn").innerText = trans.authBtnRegister;
+            }
+        }
+
+        // --- GİRİŞ & KAYIT TETİKLEYİCİSİ ---
+        function handleAuthSubmit() {
+            const uName = document.getElementById("authUsername").value.trim().toLowerCase();
+            const uPass = document.getElementById("authPassword").value;
+
+            if(uName === "" || uPass === "") {
+                alert(currentLang === "ku" ? "Lütfen tüm alanları doldurun!" : "Please fill in all fields!");
+                return;
+            }
+
+            if(authMode === "login") {
+                // Giriş İşlemi
+                usersRef.child(uName).once("value", (snap) => {
+                    if(snap.exists() && snap.val().password === uPass) {
+                        userData = snap.val();
+                        initDashboard();
+                    } else {
+                        alert(currentLang === "ku" ? "Nav an şîfre şaş e!" : "Invalid username or password!");
+                    }
+                });
+            } else {
+                // Kayıt Olma İşlemi
+                usersRef.child(uName).once("value", (snap) => {
+                    if(snap.exists()) {
+                        alert(currentLang === "ku" ? "Ev nav tê bikaranîn!" : "Username already taken!");
+                    } else {
+                        // Eğer 'mami' adıyla kayıt olunursa otomatik admin yapalım
+                        const assignedRole = (uName === "mami") ? "admin" : "user";
+                        
+                        userData = {
+                            username: uName,
+                            password: uPass,
+                            role: assignedRole,
+                            avatar: "https://www.w3schools.com/howto/img_avatar.png"
+                        };
+                        
+                        usersRef.child(uName).set(userData).then(() => {
+                            alert(currentLang === "ku" ? "Hesab hate çêkirin!" : "Account created successfully!");
+                            initDashboard();
+                        });
+                    }
+                });
+            }
+        }
+
+        function initDashboard() {
+            document.getElementById("authSection").style.display = "none";
+            document.getElementById("mainSection").style.display = "block";
+            document.getElementById("chatToggle").style.display = "flex";
+            document.getElementById("profileBtn").style.display = "flex";
+            
+            updateNavProfileElements();
+
+            if(userData.role === "admin") {
+                document.getElementById("adminAnnounceArea").style.display = "flex";
+            }
+
+            listenAnnouncements();
+            listenPosts();
+            listenChat();
+        }
+
+        function updateNavProfileElements() {
+            document.getElementById("navUsername").innerText = userData.username.toUpperCase();
+            document.getElementById("navAvatar").src = userData.avatar;
+        }
+
+        // --- DUYURU YÖNETİMİ ---
+        function listenAnnouncements() {
+            annRef.on("value", (snap) => {
+                if(snap.exists()) {
+                    document.getElementById("announcementText").innerText = snap.val();
+                }
+            });
+        }
+
+        function updateAnnouncement() {
+            const txt = document.getElementById("newAnnInput").value.trim();
+            if(txt !== "" && userData.role === "admin") {
+                annRef.set(txt);
+                document.getElementById("newAnnInput").value = "";
+            }
+        }
+
+        // --- FORUM PAYLAŞIM ALANI ---
+        function createPost() {
+            const text = document.getElementById("postInput").value.trim();
+            if(text === "") return;
+
+            postsRef.push({
+                username: userData.username,
+                role: userData.role,
+                avatar: userData.avatar,
+                content: text,
+                timestamp: Date.now()
+            });
+            document.getElementById("postInput").value = "";
+        }
+
+        function listenPosts() {
+            postsRef.on("value", (snap) => {
+                const container = document.getElementById("forumPosts");
+                container.innerHTML = "";
+                if(!snap.exists()) return;
+
+                const data = snap.val();
+                Object.keys(data).reverse().forEach(key => {
+                    const post = data[key];
+                    const isAdm = post.role === "admin";
+                    
+                    const card = document.createElement("div");
+                    card.classList.add("post-card");
+                    card.innerHTML = `
+                        <div class="post-header">
+                            <img src="${post.avatar}" alt="Avatar">
+                            <span class="username">${escapeHTML(post.username)}</span>
+                            <span class="badge ${isAdm ? 'badge-admin' : 'badge-user'}">${isAdm ? 'ADMIN' : 'USER'}</span>
+                        </div>
+                        <div style="margin-top:0.5rem; word-break:break-all;">${escapeHTML(post.content)}</div>
+                    `;
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        // --- PROFİL EDİTÖRÜ & DOSYA SEÇİMİ ---
+        function openProfileModal() {
+            document.getElementById("modalAvatarPreview").src = userData.avatar;
+            tempBase64Avatar = ""; 
+            document.getElementById("profileModal").style.display = "flex";
+        }
+
+        function closeProfileModal() {
+            document.getElementById("profileModal").style.display = "none";
+            document.getElementById("profileVerifyPassword").value = "";
+            document.getElementById("avatarFileInput").value = "";
+        }
+
+        // Dosya seçildiğinde önizleme yapma
+        function previewFileAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempBase64Avatar = e.target.result;
+                    document.getElementById("modalAvatarPreview").src = tempBase64Avatar;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveProfileChanges() {
+            const verifyPass = document.getElementById("profileVerifyPassword").value;
+
+            if(verifyPass !== userData.password) {
+                alert(currentLang === "ku" ? "Şîfreya pejirandinê xelet e!" : "Verification password wrong!");
+                return;
+            }
+
+            // Eğer yeni bir dosya seçildiyse onu yoksa mevcut avatarı ata
+            const finalAvatar = tempBase64Avatar !== "" ? tempBase64Avatar : userData.avatar;
+
+            userData.avatar = finalAvatar;
+            
+            usersRef.child(userData.username).update({ avatar: finalAvatar }).then(() => {
+                updateNavProfileElements();
+                closeProfileModal();
+                alert(currentLang === "ku" ? "Hate rojanekirin!" : "Profile updated successfully!");
+            });
+        }
+
+        // --- CANLI CHAT ---
+        function toggleChat() {
+            const win = document.getElementById("chatContainer");
+            win.style.display = win.style.display === "flex" ? "none" : "flex";
+            if(win.style.display === "flex") scrollChat();
+        }
+
+        function sendChatMessage() {
+            const inp = document.getElementById("chatInput");
+            const txt = inp.value.trim();
+            if(txt === "") return;
+
+            chatRef.push({
+                username: userData.username,
+                text: txt,
+                timestamp: Date.now()
+            });
+            inp.value = "";
+        }
+
+        function listenChat() {
+            chatRef.limitToLast(30).on("child_added", (snap) => {
+                const msg = snap.val();
+                const box = document.getElementById("chatMessages");
+                
+                const bubble = document.createElement("div");
+                bubble.classList.add("msg-bubble");
+                bubble.innerHTML = `
+                    <div class="msg-user">${escapeHTML(msg.username)}</div>
+                    <div>${escapeHTML(msg.text)}</div>
+                `;
+                box.appendChild(bubble);
+                scrollChat();
+            });
+        }
+
+        function scrollChat() {
+            const box = document.getElementById("chatMessages");
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+        }
+    </script>
+</body>
+</html>
