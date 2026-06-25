@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurd Forum</title>
+    
+    <link class="js-logo-target" rel="icon" type="image/jpeg" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0tqYfVjZ0x2e0p7G5N6t2u_wG6Kj7bA6QvA&s">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #f59e0b; 
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            
+            --admin-color: #ef4444;
+            --mod-color: #10b981;
+            --vip-color: #f59e0b;
+            --user-color: #475569;
+            --blue-tick: #3b82f6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; overflow-x: hidden; }
+
+        header { background-color: var(--card-bg); border-bottom: 1px solid var(--border-color); position: fixed; width: 100%; top: 0; left: 0; z-index: 1000; height: 70px; display: flex; align-items: center; }
+        .nav-container { max-width: 1200px; width: 100%; margin: 0 auto; display: flex; justify-content: flex-start; align-items: center; padding: 0 1.5rem; gap: 20px; }
+        .menu-toggle-btn { background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .logo-area { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-main); font-weight: 700; font-size: 1.2rem; white-space: nowrap; }
+        .logo-area img { width: 38px; height: 38px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); background: #0f172a; }
+        
+        .verified-tick { color: var(--blue-tick); margin-left: 4px; font-size: 0.95rem; }
+
+        /* --- YAN GEZİNTİ MENÜSÜ (SIDEBAR) --- */
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--card-bg); border-right: 1px solid var(--border-color); z-index: 2000; transition: left 0.3s ease; padding: 1.5rem; display: flex; flex-direction: column; }
+        .sidebar.active { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
+        
+        .sidebar-profile { display: flex; align-items: center; gap: 12px; padding: 10px; background: var(--bg-color); border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--border-color); cursor: pointer; overflow: hidden; }
+        .sidebar-profile img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color); flex-shrink: 0; }
+        .sidebar-profile-info { display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar-profile-info .name { font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .sidebar-profile-info .sub { font-size: 0.75rem; color: var(--text-muted); }
+
+        .sidebar-menu { display: flex; flex-direction: column; gap: 10px; list-style: none; }
+        .sidebar-menu li a { color: var(--text-main); text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 10px; padding: 0.75rem; border-radius: 8px; transition: background 0.2s; }
+        .sidebar-menu li a:hover { background: var(--bg-color); color: var(--accent-color); }
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1999; display: none; }
+
+        .app-page { display: none; max-width: 800px; margin: 95px auto 2rem auto; padding: 0 1rem; width: 100%; }
+        .app-page.active { display: block; }
+
+        .welcome-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid var(--border-color); padding: 2.5rem 1.5rem; border-radius: 16px; text-align: center; margin-bottom: 2rem; }
+        .welcome-card h1 { font-size: 1.8rem; margin-bottom: 1rem; color: var(--text-main); }
+        .welcome-card p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1rem; }
+        .about-section { background: var(--card-bg); border: 1px solid var(--border-color); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; }
+        .about-section h3 { margin-bottom: 0.75rem; color: var(--accent-color); }
+
+        .announcement-box { background: var(--card-bg); border: 1px solid var(--border-color); border-left: 4px solid var(--accent-color); padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem; }
+        .admin-controls { display: none; margin-top: 1rem; gap: 10px; flex-wrap: wrap; }
+        .admin-controls input { flex: 1; min-width: 200px; background: var(--bg-color); border: 1px solid var(--border-color); color: white; padding: 0.6rem; border-radius: 6px; outline: none; }
+        .admin-controls button { background: var(--accent-color); border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
+
+        .forum-section { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.2rem; }
+        .post-creator { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; }
+        .post-creator textarea { width: 100%; height: 90px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem; color: white; resize: none; outline: none; }
+        
+        .image-preview-slot { display: none; max-width: 100%; max-height: 180px; object-fit: contain; border-radius: 8px; margin-top: 5px; border: 1px solid var(--border-color); align-self: flex-start; }
+        .creator-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        .auth-lock-notice { background: rgba(245, 158, 11, 0.1); border: 1px dashed var(--accent-color); padding: 1rem; border-radius: 8px; text-align: center; color: var(--accent-color); font-weight: 600; font-size: 0.9rem; width: 100%; }
+
+        .post-card { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; position: relative; }
+        .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; padding-right: 70px; flex-wrap: wrap; }
+        .post-header img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; cursor: pointer; flex-shrink: 0; }
+        .post-header .username { font-weight: 600; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+        
+        .post-admin-delete { position: absolute; top: 1.2rem; right: 1.2rem; background: rgba(239, 68, 68, 0.15); border: 1px solid var(--admin-color); color: var(--admin-color); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s; z-index: 5; }
+        .post-admin-delete:hover { background: var(--admin-color); color: white; }
+
+        .badge { font-size: 0.65rem; padding: 3px 8px; border-radius: 4px; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-admin { background-color: var(--admin-color); }
+        .badge-mod { background-color: var(--mod-color); }
+        .badge-vip { background-color: var(--vip-color); color: #000; }
+        .badge-user { background-color: var(--user-color); }
+
+        .post-img { width: 100%; max-height: 420px; object-fit: cover; border-radius: 8px; margin-top: 0.75rem; border: 1px solid var(--border-color); }
+
+        .auth-container { max-width: 420px; margin: 2rem auto; background: var(--card-bg); border: 1px solid var(--border-color); padding: 2rem 1.5rem; border-radius: 16px; text-align: center; width: 100%; }
+        .auth-tabs { display: flex; gap: 10px; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); }
+        .auth-tab { flex: 1; background: none; border: none; color: var(--text-muted); font-weight: 700; cursor: pointer; padding: 0.75rem 0.5rem; font-size: 1rem; transition: 0.2s; }
+        .auth-tab.active { color: var(--accent-color); border-bottom: 2px solid var(--accent-color); }
+        .auth-input-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem; }
+        .auth-input-group input, .tel-box select { background: var(--bg-color); border: 1px solid var(--border-color); color: white; padding: 0.75rem; border-radius: 8px; outline: none; font-size: 0.95rem; width: 100%; }
+        .tel-box { display: flex; gap: 8px; width: 100%; align-items: center; }
+        .tel-box select { width: 110px; flex-shrink: 0; }
+        .tel-box input { flex: 1; }
+        .auth-btn { background: var(--accent-color); color: black; border: none; padding: 0.75rem; width: 100%; border-radius: 8px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; font-size: 1rem; }
+        .auth-btn:hover { opacity: 0.9; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; display: none; justify-content: center; align-items: center; padding: 1rem; }
+        .custom-modal { background: var(--card-bg); border: 1px solid var(--border-color); width: 100%; max-width: 440px; padding: 2rem 1.5rem; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; color: white; font-size: 1.3rem; cursor: pointer; }
+        .avatar-preview-area { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
+        .avatar-preview-area img { width: 95px; height: 95px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color); }
+        .file-upload-btn { background: #334155; color: white; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+
+        .profile-view-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 2rem 1rem; text-align: center; }
+        .profile-view-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-color); margin-bottom: 1rem; }
+        .follow-stats { display: flex; justify-content: center; gap: 30px; margin: 1.2rem 0; color: var(--text-muted); font-size: 0.9rem; }
+        .follow-btn { background: var(--accent-color); color: black; border: none; padding: 0.6rem 2.5rem; font-weight: 700; border-radius: 6px; cursor: pointer; }
+        .follow-btn.following { background: #475569; color: white; }
+
+        .search-box { background: var(--card-bg); border: 1px solid var(--border-color); padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem; }
+        .search-box input { width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: white; padding: 0.75rem; border-radius: 8px; outline: none; }
+        .search-result-item { background: var(--card-bg); border: 1px solid var(--border-color); padding: 0.8rem 1rem; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; gap: 10px; }
+        .user-meta-info { display: flex; align-items: center; gap: 12px; overflow: hidden; }
+        .user-meta-info img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .user-meta-info span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+
+        /* --- ADMIN PANELI --- */
+        .admin-table-wrapper { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow-x: auto; margin-top: 1.5rem; width: 100%; }
+        .admin-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; min-width: 600px; }
+        .admin-table th, .admin-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        .admin-table th { background: #111827; color: var(--text-muted); }
+        .tag-select-admin, .action-btn-admin { background: var(--bg-color); color: white; border: 1px solid var(--border-color); padding: 6px; border-radius: 4px; outline: none; cursor: pointer; font-size: 0.8rem; }
+        .action-btn-admin.ban-btn { background: var(--admin-color); border: none; font-weight: 600; margin-left: 4px; }
+        .action-btn-admin.mute-btn { background: #d97706; border: none; font-weight: 600; }
+
+        /* --- SABİTLENMİŞ CANLI CHAT --- */
+        .chat-toggle-btn { position: fixed; bottom: 20px; right: 20px; background-color: var(--accent-color); color: #000; width: 56px; height: 56px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.4rem; cursor: pointer; z-index: 1500; border: none; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+        .chat-container { position: fixed; bottom: 85px; right: 20px; width: 340px; height: 440px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; display: none; flex-direction: column; z-index: 1500; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.6); max-width: calc(100% - 40px); }
+        .chat-header { background-color: #111827; padding: 0.9rem 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .chat-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; }
+        
+        .chat-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; width: 100%; }
+        .msg-bubble { background-color: var(--bg-color); padding: 0.6rem 0.8rem; border-radius: 8px; border-left: 3px solid var(--accent-color); flex: 1; min-width: 0; word-break: break-all; }
+        .msg-user { font-weight: 700; font-size: 0.75rem; color: var(--accent-color); margin-bottom: 3px; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .msg-text { font-size: 0.88rem; color: var(--text-main); line-height: 1.4; }
+        
+        .chat-msg-delete { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--admin-color); cursor: pointer; font-size: 0.8rem; padding: 6px; border-radius: 6px; display: none; flex-shrink: 0; align-self: center; transition: 0.2s; }
+        .chat-msg-delete:hover { background: var(--admin-color); color: white; }
+        
+        .chat-input-area { display: flex; padding: 0.75rem; background-color: #111827; border-top: 1px solid var(--border-color); gap: 8px; align-items: center; }
+        .chat-input-area input { flex: 1; background-color: var(--bg-color); border: 1px solid var(--border-color); color: white; padding: 0.6rem; border-radius: 6px; outline: none; font-size: 0.9rem; min-width: 0; }
+        .chat-input-area button { background-color: var(--accent-color); border: none; padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <button class="menu-toggle-btn" id="menuBtn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <a href="#" class="logo-area" onclick="navigateToPage('welcomePage')">
+                <img class="js-logo-target" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0tqYfVjZ0x2e0p7G5N6t2u_wG6Kj7bA6QvA&s" alt="Logo" onerror="this.onerror=null; this.src='https://www.w3schools.com/howto/img_avatar.png';">
+                <span>Kurdên Nasyonalist Forum</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <nav class="sidebar" id="sidebarMenu">
+        <div class="sidebar-header">
+            <h3>Menü</h3>
+            <button class="menu-toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="sidebar-profile" id="sidebarProfileCard" style="display: none;" onclick="openProfileModal()">
+            <img id="sideAvatar" src="https://www.w3schools.com/howto/img_avatar.png" alt="Avatar">
+            <div class="sidebar-profile-info">
+                <span class="name" id="sideUsername">Üye</span>
+                <span class="sub">Profili Düzenle</span>
+            </div>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li><a href="#" onclick="navigateToPage('welcomePage')"><i class="fa-solid fa-house"></i> Ana Sayfa</a></li>
+            <li><a href="#" onclick="navigateToPage('forumPage')"><i class="fa-solid fa-comments"></i> Forumlar</a></li>
+            <li id="searchMenuLink" style="display: none;"><a href="#" onclick="navigateToPage('searchPage')"><i class="fa-solid fa-magnifying-glass"></i> Kullanıcı Ara</a></li>
+            <li id="adminMenuLink" style="display: none;"><a href="#" onclick="navigateToPage('adminPage')"><i class="fa-solid fa-user-shield"></i> Admin Paneli</a></li>
+            <li id="authMenuLink"><a href="#" onclick="navigateToPage('authPage')"><i class="fa-solid fa-right-to-bracket"></i> Giriş Yap / Kayıt Ol</a></li>
+            <li id="logoutMenuLink" style="display: none;"><a href="#" onclick="logout()"><i class="fa-solid fa-power-off"></i> Çıkış Yap</a></li>
+        </ul>
+    </nav>
+
+    <main class="app-page active" id="welcomePage">
+        <div class="welcome-card">
+            <h1>Kurdên Nasyonalist Forum'a Hoş Geldiniz!</h1>
+            <p>Fikirlerin özgürce paylaşıldığı, topluluk bilincinin ve samimi dostlukların kurulduğu platformdasınız.</p>
+            <button class="auth-btn" style="width: auto; padding: 0.75rem 2rem;" onclick="navigateToPage('authPage')" id="welcomeAuthBtn">Hemen Katıl veya Giriş Yap</button>
+        </div>
+
+        <div class="about-section">
+            <h3><i class="fa-solid fa-circle-info"></i> Hakkımızda</h3>
+            <p>Kurdên Nasyonalist Forum, kullanıcı deneyimini en ön planda tutan; güvenli, hızlı ve interaktif bir topluluk projesidir. Amacımız insanların ilgi alanlarına göre forum başlıkları açabilmesini, yeni insanlarla tanışıp canlı chat üzerinden gerçek zamanlı iletişim kurabilmesini sağlamaktır.</p>
+        </div>
+    </main>
+
+    <main class="app-page" id="authPage">
+        <div class="auth-container" id="authSection">
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Giriş Yap</button>
+                <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Kayıt Ol</button>
+            </div>
+            <h2 id="authTitle" style="margin-bottom: 1.5rem; font-size: 1.3rem;">Giriş Yap</h2>
+            <div class="auth-input-group">
+                <input type="text" id="authUsername" placeholder="Kullanıcı Adı">
+                <input type="email" id="authEmail" placeholder="E-posta Adresi" style="display: none;">
+                <div class="tel-box" id="authTelBox" style="display: none;">
+                    <select id="authCountryCode">
+                        <option value="+90">+90 (TR)</option>
+                        <option value="+49">+49 (DE)</option>
+                        <option value="+1">+1 (US)</option>
+                    </select>
+                    <input type="tel" id="authPhoneNumber" placeholder="Telefon Numarası">
+                </div>
+                <input type="password" id="authPassword" placeholder="Şifre">
+            </div>
+            <button class="auth-btn" id="authBtn" onclick="handleAuthSubmit()">Giriş Yap</button>
+        </div>
+    </main>
+
+    <main class="app-page" id="forumPage">
+        <div class="announcement-box">
+            <h3><i class="fa-solid fa-bullhorn text-amber-500"></i> Duyurular</h3>
+            <p id="announcementText" style="margin-top: 5px; word-break: break-word;">Yükleniyor...</p>
+            <div class="admin-controls" id="adminAnnounceArea">
+                <input type="text" id="newAnnInput" placeholder="Duyuruyu Güncelle...">
+                <button onclick="updateAnnouncement()">Yayınla</button>
+            </div>
+        </div>
+
+        <div class="forum-section">
+            <div class="post-creator" id="creatorContainer" style="display: none;">
+                <textarea id="postInput" placeholder="Forumda yeni bir konu veya fikir paylaşın..."></textarea>
+                <img id="postImagePreview" class="image-preview-slot" alt="Önizleme">
+                <div class="creator-actions">
+                    <label class="file-upload-btn" style="background:#1e293b;">
+                        <i class="fa-solid fa-camera"></i> Görsel Ekle
+                        <input type="file" id="postFileInput" accept="image/*" style="display: none;" onchange="previewPostFile(this)">
+                    </label>
+                    <button class="auth-btn" id="postSubmitBtn" style="width: auto; padding: 0.6rem 1.5rem;" onclick="createPost()">Paylaş</button>
+                </div>
+            </div>
+            <div id="forumLockNotice" class="auth-lock-notice" style="margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-lock"></i> Forumda paylaşım yapabilmek için lütfen giriş yapın.
+            </div>
+
+            <div class="posts-list" id="forumPosts"></div>
+        </div>
+    </main>
+
+    <main class="app-page" id="searchPage">
+        <div class="search-box">
+            <input type="text" id="userSearchInput" placeholder="Kullanıcı adı ile arama yapın..." oninput="searchUsers()">
+        </div>
+        <div id="searchResultsList"></div>
+    </main>
+
+    <main class="app-page" id="profileViewPage">
+        <div class="profile-view-card">
+            <img id="viewAvatar" class="profile-view-avatar" src="https://www.w3schools.com/howto/img_avatar.png" alt="Profil">
+            <h2 id="viewUsername" style="display:flex; align-items:center; justify-content:center; gap:4px; margin-bottom: 5px;">Kullanıcı</h2>
+            <div style="margin-bottom: 10px;"><span id="viewUserBadge" class="badge">USER</span></div>
+            <div class="follow-stats">
+                <div>Takipçi: <strong id="followerCount">0</strong></div>
+                <div>Takip Edilen: <strong id="followingCount">0</strong></div>
+            </div>
+            <button id="followActionBtn" class="follow-btn" onclick="toggleFollow()">Takip Et</button>
+        </div>
+    </main>
+
+    <main class="app-page" id="adminPage">
+        <h2 style="font-size: 1.4rem; margin-bottom: 10px;">Kullanıcı Yönetim Paneli</h2>
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Kullanıcı Adı</th>
+                        <th>Durum</th>
+                        <th>Rol / Unvan</th>
+                        <th>Mavi Tik</th>
+                        <th>Ceza Yönetimi</th>
+                    </tr>
+                </thead>
+                <tbody id="adminUserTableBody"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="profileModal">
+        <div class="profile-modal custom-modal">
+            <button class="modal-close" onclick="closeProfileModal()"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-bottom: 1.5rem;">Hesap Bilgilerini Düzenle</h3>
+            
+            <div class="avatar-preview-area">
+                <img id="modalAvatarPreview" src="https://www.w3schools.com/howto/img_avatar.png" alt="Önizleme">
+                <label class="file-upload-btn">
+                    <i class="fa-solid fa-image"></i> Fotoğraf Değiştir
+                    <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="previewFileAvatar(this)">
+                </label>
+            </div>
+
+            <div class="auth-input-group">
+                <label style="font-size: 0.85rem; color: var(--text-muted);">Kullanıcı Adını Değiştir:</label>
+                <input type="text" id="profileNewUsername" placeholder="Yeni Kullanıcı Adı">
+
+                <label style="font-size: 0.85rem; color: var(--text-muted);">Şifreyi Değiştir:</label>
+                <input type="password" id="profileNewPassword" placeholder="Yeni Şifre (İstemiyorsanız boş bırakın)">
+                
+                <hr style="border-color: var(--border-color); margin: 5px 0;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight:600;">Onaylamak İçin Mevcut Şifreniz:</label>
+                <input type="password" id="profileVerifyPassword" placeholder="Mevcut Şifre">
+            </div>
+            <button class="auth-btn" onclick="saveProfileChanges()">Değişiklikleri Kaydet</button>
+        </div>
+    </div>
+
+    <button class="chat-toggle-btn" id="chatToggle" onclick="toggleChat()"><i class="fa-regular fa-comment-dots"></i></button>
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <h4 style="display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-circle" style="color: #22c55e; font-size: 0.65rem;"></i> Canlı Sohbet</h4>
+            <button style="background:none; border:none; color:white; cursor:pointer;" onclick="toggleChat()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        
+        <div class="chat-input-area" id="chatInputArea" style="display: none;">
+            <input type="text" id="chatInput" placeholder="Mesaj yazın..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+            <button onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+        <div id="chatLockNotice" class="auth-lock-notice" style="border-radius: 0; border: none; border-top: 1px solid var(--border-color);">
+            Sohbete katılmak için giriş yapmalısınız.
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://kurd-352da-default-rtdb.europe-west1.firebasedatabase.app/" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        const chatRef = database.ref("messages");
+        const postsRef = database.ref("posts");
+        const usersRef = database.ref("users");
+        const annRef = database.ref("announcement");
+
+        let userData = null;
+        let authMode = "login";
+        let tempBase64Avatar = "";
+        let tempPostImage = "";
+        let targetProfileUser = "";
+
+        const tickHTML = `<i class="fa-solid fa-circle-check verified-tick" title="Doğrulanmış Hesap"></i>`;
+
+        window.onload = function() {
+            listenAnnouncements();
+            listenPosts();
+            listenChat();
+            checkAutoLogin();
+        };
+
+        function checkAutoLogin() {
+            const savedUser = localStorage.getItem("mami_forum_user");
+            const savedPass = localStorage.getItem("mami_forum_pass");
+            
+            if(savedUser && savedPass) {
+                usersRef.child(savedUser).once("value", (snap) => {
+                    if(snap.exists()) {
+                        const account = snap.val();
+                        if(!account.banned && account.password === savedPass) {
+                            userData = account;
+                            usersRef.child(savedUser).update({ status: "Aktif" });
+                            initDashboard();
+                        } else {
+                            localStorage.clear();
+                        }
+                    }
+                });
+            }
+        }
+
+        function toggleSidebar() {
+            const side = document.getElementById("sidebarMenu");
+            const over = document.getElementById("sidebarOverlay");
+            if(side.classList.contains("active")) {
+                side.classList.remove("active");
+                over.style.display = "none";
+            } else {
+                side.classList.add("active");
+                over.style.display = "block";
+            }
+        }
+
+        function navigateToPage(pageId) {
+            document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            toggleSidebar();
+            if(pageId === 'adminPage') loadAdminDashboard();
+        }
+
+        function switchAuthTab(mode) {
+            authMode = mode;
+            document.getElementById("tabLogin").classList.remove("active");
+            document.getElementById("tabRegister").classList.remove("active");
+            const emailInp = document.getElementById("authEmail");
+            const telInp = document.getElementById("authTelBox");
+
+            if(mode === 'login') {
+                document.getElementById("tabLogin").classList.add("active");
+                document.getElementById("authTitle").innerText = "Giriş Yap";
+                document.getElementById("authBtn").innerText = "Giriş Yap";
+                emailInp.style.display = "none";
+                telInp.style.display = "none";
+            } else {
+                document.getElementById("tabRegister").classList.add("active");
+                document.getElementById("authTitle").innerText = "Hesap Oluştur";
+                document.getElementById("authBtn").innerText = "Kayıt Ol";
+                emailInp.style.display = "block";
+                telInp.style.display = "flex";
+            }
+        }
+
+        function validateWhatsAppNumber(countryCode, phoneNumber) {
+            const cleanNumber = phoneNumber.replace(/\D/g, '');
+            if (countryCode === "+90") {
+                if (cleanNumber.length !== 10 || !cleanNumber.startsWith('5')) {
+                    return false; 
+                }
+            } else {
+                if (cleanNumber.length < 7 || cleanNumber.length > 15) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function handleAuthSubmit() {
+            const uName = document.getElementById("authUsername").value.trim().toLowerCase();
+            const uPass = document.getElementById("authPassword").value;
+            const uEmail = document.getElementById("authEmail").value.trim();
+            const uCode = document.getElementById("authCountryCode").value;
+            const uTel = document.getElementById("authPhoneNumber").value.trim();
+
+            if(uName === "" || uPass === "") return;
+
+            if(authMode === "login") {
+                usersRef.child(uName).once("value", (snap) => {
+                    if(snap.exists()) {
+                        const account = snap.val();
+                        if(account.banned) { alert("Bu hesap engellenmiştir!"); return; }
+                        if(account.password === uPass) {
+                            userData = account;
+                            localStorage.setItem("mami_forum_user", uName);
+                            localStorage.setItem("mami_forum_pass", uPass);
+                            usersRef.child(uName).update({ status: "Aktif" });
+                            initDashboard();
+                        } else { alert("Kullanıcı adı veya şifre hatalı!"); }
+                    } else { alert("Kullanıcı adı veya şifre hatalı!"); }
+                });
+            } else {
+                if(uEmail === "" || uTel === "") { alert("Lütfen tüm alanları doldurun!"); return; }
+                if(!validateWhatsAppNumber(uCode, uTel)) {
+                    alert("Kayıt Reddedildi! Geçersiz format veya aktif olmayan WhatsApp numarası yapısı.");
+                    return;
+                }
+
+                usersRef.child(uName).once("value", (snap) => {
+                    if(snap.exists()) { alert("Bu kullanıcı adı zaten alınmış!"); }
+                    else {
+                        const assignedRole = (uName === "mami") ? "admin" : "user";
+                        userData = {
+                            username: uName, password: uPass, email: uEmail,
+                            phone: uCode + uTel, role: assignedRole, status: "Aktif",
+                            avatar: "https://www.w3schools.com/howto/img_avatar.png",
+                            verified: (assignedRole === "admin"), muted: false, banned: false
+                        };
+                        usersRef.child(uName).set(userData).then(() => { 
+                            localStorage.setItem("mami_forum_user", uName);
+                            localStorage.setItem("mami_forum_pass", uPass);
+                            initDashboard(); 
+                        });
+                    }
+                });
+            }
+        }
+
+        function initDashboard() {
+            document.getElementById("authMenuLink").style.display = "none";
+            document.getElementById("logoutMenuLink").style.display = "block";
+            document.getElementById("searchMenuLink").style.display = "block";
+            document.getElementById("sidebarProfileCard").style.display = "flex";
+            document.getElementById("welcomeAuthBtn").style.display = "none";
+
+            document.getElementById("creatorContainer").style.display = "flex";
+            document.getElementById("forumLockNotice").style.display = "none";
+            document.getElementById("chatInputArea").style.display = "flex";
+            document.getElementById("chatLockNotice").style.display = "none";
+            
+            usersRef.child(userData.username).on("value", (snap) => {
+                if(!snap.exists()) return;
+                const current = snap.val();
+                if(current.banned) { alert("Hesabınız banlandı!"); logout(); }
+                userData.muted = current.muted || false;
+                userData.role = current.role || "user";
+                userData.verified = current.verified || false;
+                
+                if(userData.muted) {
+                    document.getElementById("postInput").placeholder = "Yazma yetkiniz engellendi (SUSTURULDUNUZ).";
+                    document.getElementById("postInput").disabled = true;
+                    document.getElementById("postSubmitBtn").disabled = true;
+                    document.getElementById("chatInput").placeholder = "Susturuldunuz...";
+                    document.getElementById("chatInput").disabled = true;
+                } else {
+                    document.getElementById("postInput").placeholder = "Forumda yeni bir konu veya fikir paylaşın...";
+                    document.getElementById("postInput").disabled = false;
+                    document.getElementById("postSubmitBtn").disabled = false;
+                    document.getElementById("chatInput").placeholder = "Mesaj yazın...";
+                    document.getElementById("chatInput").disabled = false;
+                }
+                listenPosts();
+                listenChat();
+            });
+
+            updateSidebarProfileElements();
+            navigateToPage('forumPage');
+
+            if(userData.role === "admin") {
+                document.getElementById("adminAnnounceArea").style.display = "flex";
+                document.getElementById("adminMenuLink").style.display = "block";
+            }
+        }
+
+        function updateSidebarProfileElements() {
+            document.getElementById("sideUsername").innerHTML = userData.username.toUpperCase() + (userData.verified ? tickHTML : "");
+            document.getElementById("sideAvatar").src = userData.avatar;
+        }
+
+        function listenAnnouncements() {
+            annRef.on("value", (snap) => {
+                document.getElementById("announcementText").innerText = snap.exists() ? snap.val() : "Duyuru bulunmuyor.";
+            });
+        }
+        function updateAnnouncement() {
+            const txt = document.getElementById("newAnnInput").value.trim();
+            if(txt !== "" && userData.role === "admin") {
+                annRef.set(txt);
+                document.getElementById("newAnnInput").value = "";
+            }
+        }
+
+        function previewPostFile(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempPostImage = e.target.result;
+                    const preview = document.getElementById("postImagePreview");
+                    preview.src = tempPostImage;
+                    preview.style.display = "block";
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function createPost() {
+            if(!userData || userData.muted) return;
+            const text = document.getElementById("postInput").value.trim();
+            if(text === "" && tempPostImage === "") return;
+
+            postsRef.push({
+                username: userData.username,
+                content: text,
+                image: tempPostImage,
+                timestamp: Date.now()
+            });
+
+            document.getElementById("postInput").value = "";
+            document.getElementById("postFileInput").value = "";
+            const preview = document.getElementById("postImagePreview");
+            preview.src = "";
+            preview.style.display = "none";
+            tempPostImage = "";
+        }
+
+        function deletePost(postKey) {
+            if(userData && userData.role === "admin") {
+                if(confirm("Bu forum gönderisini silmek istediğinize emin misiniz?")) {
+                    postsRef.child(postKey).remove();
+                }
+            }
+        }
+
+        function deleteChatMessage(msgKey) {
+            if(userData && userData.role === "admin") {
+                if(confirm("Bu mesajı silmek istediğinize emin misiniz?")) {
+                    chatRef.child(msgKey).remove();
+                    const el = document.getElementById("msg-" + msgKey);
+                    if(el) el.remove();
+                }
+            }
+        }
+
+        function listenPosts() {
+            postsRef.on("value", (snap) => {
+                const container = document.getElementById("forumPosts");
+                container.innerHTML = "";
+                if(!snap.exists()) return;
+
+                const data = snap.val();
+                Object.keys(data).reverse().forEach(key => {
+                    const post = data[key];
+                    
+                    usersRef.child(post.username).once("value", (uSnap) => {
+                        const uInfo = uSnap.exists() ? uSnap.val() : { avatar: "https://www.w3schools.com/howto/img_avatar.png", role: "user", verified: false };
+                        const r = uInfo.role ? uInfo.role.toLowerCase() : "user";
+                        
+                        const card = document.createElement("div");
+                        card.classList.add("post-card");
+                        
+                        let imgTag = post.image ? `<img class="post-img" src="${post.image}" alt="Post Image">` : '';
+                        let tick = uInfo.verified ? tickHTML : "";
+                        let profileAction = userData ? `onclick="viewUserProfile('${post.username}')"` : `onclick="alert('Profilleri görebilmek için giriş yapmalısınız!')"`;
+                        
+                        let deleteBtn = "";
+                        if(userData && userData.role === "admin") {
+                            deleteBtn = `<button class="post-admin-delete" onclick="deletePost('${key}')"><i class="fa-solid fa-trash"></i> Sil</button>`;
+                        }
+
+                        card.innerHTML = `
+                            ${deleteBtn}
+                            <div class="post-header">
+                                <img src="${uInfo.avatar}" ${profileAction}>
+                                <span class="username" ${profileAction}>${escapeHTML(post.username)}${tick}</span>
+                                <span class="badge badge-${r}">${r}</span>
+                            </div>
+                            <div style="word-break:break-word; padding-top:4px; font-size:0.95rem;">${escapeHTML(post.content)}</div>
+                            ${imgTag}
+                        `;
+                        container.appendChild(card);
+                    });
+                });
+            });
+        }
+
+        function viewUserProfile(username) {
+            if(!userData) return;
+            targetProfileUser = username;
+            usersRef.child(username).once("value", (snap) => {
+                if(!snap.exists()) return;
+                const pData = snap.val();
+                const r = pData.role ? pData.role.toLowerCase() : "user";
+                
+                document.getElementById("viewUsername").innerHTML = pData.username.toUpperCase() + (pData.verified ? tickHTML : "");
+                document.getElementById("viewAvatar").src = pData.avatar;
+                
+                const b = document.getElementById("viewUserBadge");
+                b.className = `badge badge-${r}`;
+                b.innerText = r;
+
+                if(username === userData.username) {
+                    document.getElementById("followActionBtn").style.display = "none";
+                } else {
+                    document.getElementById("followActionBtn").style.display = "inline-block";
+                    checkFollowStatus();
+                }
+
+                database.ref(`followers/${username}`).on("value", s => {
+                    document.getElementById("followerCount").innerText = s.exists() ? Object.keys(s.val()).length : 0;
+                });
+                database.ref(`following/${username}`).on("value", s => {
+                    document.getElementById("followingCount").innerText = s.exists() ? Object.keys(s.val()).length : 0;
+                });
+
+                document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
+                document.getElementById("profileViewPage").classList.add('active');
+            });
+        }
+
+        function checkFollowStatus() {
+            database.ref(`following/${userData.username}/${targetProfileUser}`).once("value", (snap) => {
+                const btn = document.getElementById("followActionBtn");
+                if(snap.exists()) { btn.innerText = "Takipten Çık"; btn.classList.add("following"); }
+                else { btn.innerText = "Takip Et"; btn.classList.remove("following"); }
+            });
+        }
+
+        function toggleFollow() {
+            const followRef = database.ref(`following/${userData.username}/${targetProfileUser}`);
+            const followerRef = database.ref(`followers/${targetProfileUser}/${userData.username}`);
+            followRef.once("value", (snap) => {
+                if(snap.exists()) { followRef.remove(); followerRef.remove(); }
+                else { followRef.set(true); followerRef.set(true); }
+                checkFollowStatus();
+            });
+        }
+
+        function searchUsers() {
+            const query = document.getElementById("userSearchInput").value.trim().toLowerCase();
+            const resContainer = document.getElementById("searchResultsList");
+            resContainer.innerHTML = "";
+            if(query === "") return;
+
+            usersRef.orderByKey().startAt(query).endAt(query + "\uf8ff").once("value", (snap) => {
+                if(!snap.exists()) return;
+                snap.forEach(child => {
+                    const u = child.val();
+                    if(u.banned) return;
+                    const div = document.createElement("div");
+                    div.classList.add("search-result-item");
+                    div.innerHTML = `
+                        <div class="user-meta-info">
+                            <img src="${u.avatar}">
+                            <span>${u.username.toUpperCase()}${u.verified ? tickHTML : ""}</span>
+                        </div>
+                        <button class="auth-btn" style="width:auto; padding:5px 12px; font-size:0.8rem;" onclick="viewUserProfile('${u.username}')">Profil</button>
+                    `;
+                    resContainer.appendChild(div);
+                });
+            });
+        }
+
+        function openProfileModal() {
+            document.getElementById("modalAvatarPreview").src = userData.avatar;
+            document.getElementById("profileNewUsername").value = userData.username;
+            document.getElementById("profileNewPassword").value = "";
+            document.getElementById("profileVerifyPassword").value = "";
+            tempBase64Avatar = "";
+            document.getElementById("profileModal").style.display = "flex";
+            toggleSidebar();
+        }
+
+        function closeProfileModal() { document.getElementById("profileModal").style.display = "none"; }
+
+        function previewFileAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempBase64Avatar = e.target.result;
+                    document.getElementById("modalAvatarPreview").src = tempBase64Avatar;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveProfileChanges() {
+            const newUsername = document.getElementById("profileNewUsername").value.trim().toLowerCase();
+            const newPass = document.getElementById("profileNewPassword").value;
+            const verifyPass = document.getElementById("profileVerifyPassword").value;
+
+            if(verifyPass !== userData.password) { alert("Mevcut şifreniz yanlış!"); return; }
+            if(newUsername === "") { alert("Kullanıcı adı boş olamaz!"); return; }
+
+            const proceedUpdate = (isNewName) => {
+                const updates = {};
+                if(tempBase64Avatar !== "") { updates.avatar = tempBase64Avatar; userData.avatar = tempBase64Avatar; }
+                if(newPass.trim() !== "") { updates.password = newPass; userData.password = newPass; }
+                
+                if(isNewName) {
+                    const oldUsername = userData.username;
+                    userData.username = newUsername;
+                    updates.username = newUsername;
+                    
+                    usersRef.child(newUsername).set({ ...userData, ...updates }).then(() => {
+                        usersRef.child(oldUsername).remove();
+                        updateLogsOnNameChange(oldUsername, newUsername);
+                        
+                        localStorage.setItem("mami_forum_user", newUsername);
+                        if(newPass.trim() !== "") localStorage.setItem("mami_forum_pass", newPass);
+                        
+                        alert("Kullanıcı adınız değiştirildi! Sayfa yenileniyor.");
+                        location.reload();
+                    });
+                } else {
+                    if(newPass.trim() !== "") localStorage.setItem("mami_forum_pass", newPass);
+                    usersRef.child(userData.username).update(updates).then(() => {
+                        updateSidebarProfileElements();
+                        closeProfileModal();
+                        alert("Profil güncellendi!");
+                    });
+                }
+            };
+
+            if(newUsername !== userData.username) {
+                usersRef.child(newUsername).once("value", (snap) => {
+                    if(snap.exists()) { alert("Bu kullanıcı adı zaten alınmış!"); }
+                    else { proceedUpdate(true); }
+                });
+            } else { proceedUpdate(false); }
+        }
+
+        function updateLogsOnNameChange(oldName, newName) {
+            postsRef.once("value", s => {
+                if(s.exists()) s.forEach(c => { if(c.val().username === oldName) postsRef.child(c.key).update({ username: newName }); });
+            });
+            chatRef.once("value", s => {
+                if(s.exists()) s.forEach(c => { if(c.val().username === oldName) chatRef.child(c.key).update({ username: newName }); });
+            });
+        }
+
+        function loadAdminDashboard() {
+            if(userData.role !== "admin") return;
+            usersRef.once("value", (snap) => {
+                const tbody = document.getElementById("adminUserTableBody");
+                tbody.innerHTML = "";
+                if(!snap.exists()) return;
+
+                snap.forEach(child => {
+                    const u = child.val();
+                    if(u.banned) return;
+                    
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td style="font-weight:600;">${u.username}</td>
+                        <td style="color:${u.status === 'Aktif' ? '#22c55e' : '#94a3b8'}; font-weight:700;">${u.status || 'Çevrimdışı'}</td>
+                        <td>
+                            <select class="tag-select-admin" onchange="adminChangeRole('${u.username}', this.value)">
+                                <option value="user" ${u.role === 'user' ? 'selected' : ''}>USER</option>
+                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>ADMIN</option>
+                                <option value="mod" ${u.role === 'mod' ? 'selected' : ''}>MODERATÖR</option>
+                                <option value="vip" ${u.role === 'vip' ? 'selected' : ''}>VIP</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="tag-select-admin" onchange="adminToggleTick('${u.username}', this.value)">
+                                <option value="false" ${!u.verified ? 'selected' : ''}>Yok</option>
+                                <option value="true" ${u.verified ? 'selected' : ''}>Mavi Tik ✓</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="action-btn-admin mute-btn" onclick="adminToggleMute('${u.username}', ${u.muted ? false : true})">
+                                ${u.muted ? 'Aç' : 'Sustur'}
+                            </button>
+                            <button class="action-btn-admin ban-btn" onclick="adminActionBan('${u.username}')">Banla</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+        function adminChangeRole(username, newRole) { usersRef.child(username).update({ role: newRole }).then(() => loadAdminDashboard()); }
+        function adminToggleTick(username, status) { usersRef.child(username).update({ verified: (status === "true") }).then(() => loadAdminDashboard()); }
+        function adminToggleMute(username, muteState) { usersRef.child(username).update({ muted: muteState }).then(() => loadAdminDashboard()); }
+        function adminActionBan(username) { if(confirm(`${username} banlansın mı?`)) { usersRef.child(username).update({ banned: true, status: "Çevrimdışı" }).then(() => loadAdminDashboard()); } }
+
+        function toggleChat() {
+            const win = document.getElementById("chatContainer");
+            win.style.display = win.style.display === "flex" ? "none" : "flex";
+            if(win.style.display === "flex") scrollChat();
+        }
+
+        function sendChatMessage() {
+            if(!userData || userData.muted) return;
+            const inp = document.getElementById("chatInput");
+            const txt = inp.value.trim();
+            if(txt === "") return;
+
+            chatRef.push({ username: userData.username, text: txt, timestamp: Date.now() });
+            inp.value = "";
+        }
+
+        function listenChat() {
+            chatRef.limitToLast(35).on("value", (snap) => {
+                const box = document.getElementById("chatMessages");
+                box.innerHTML = "";
+                if(!snap.exists()) return;
+
+                const data = snap.val();
+                Object.keys(data).forEach(key => {
+                    const msg = data[key];
+                    
+                    usersRef.child(msg.username).once("value", uSnap => {
+                        const verified = uSnap.exists() && uSnap.val().verified ? tickHTML : "";
+                        
+                        const row = document.createElement("div");
+                        row.classList.add("chat-row");
+                        row.id = "msg-" + key;
+
+                        let chatDelBtn = "";
+                        if(userData && userData.role === "admin") {
+                            chatDelBtn = `<button class="chat-msg-delete" style="display:block;" onclick="deleteChatMessage('${key}')"><i class="fa-solid fa-trash-can"></i></button>`;
+                        }
+
+                        row.innerHTML = `
+                            <div class="msg-bubble">
+                                <div class="msg-user">${escapeHTML(msg.username)}${verified}</div>
+                                <div class="msg-text">${escapeHTML(msg.text)}</div>
+                            </div>
+                            ${chatDelBtn}
+                        `;
+                        box.appendChild(row);
+                        scrollChat();
+                    });
+                });
+            });
+        }
+
+        function scrollChat() { const box = document.getElementById("chatMessages"); box.scrollTop = box.scrollHeight; }
+        
+        function logout() { 
+            if(userData) { usersRef.child(userData.username).update({ status: "Çevrimdışı" }); } 
+            localStorage.clear(); 
+            location.reload(); 
+        }
+        
+        function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
+    </script>
+</body>
+</html>
