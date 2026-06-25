@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurd Forum & Chat</title>
+    
+    <link rel="icon" type="image/jpeg" href="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/beee0e21-2922-47e1-b70f-001dd1ad0a17/dk5gtc4-d244edf7-b16e-43e8-b2bf-620f18ac998a.jpg/v1/fill/w_883,h_905,q_70,strp/kurden_nasyonalist_logo_by_pictureacc235_dk5gtc4-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9OTg1IiwicGF0aCI6Ii9mL2JlZWUwZTIxLTI5MjItNDdlMS1iNzBmLTAwMWRkMWFkMGExNy9kazVndGM0LWQyNDRlZGY3LWIxNmUtNDNlOC1iMmJmLTYyMGYxOGFjOTk4YS5qcGciLCJ3aWR0aCI6Ijw9OTYwIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.JBlSb1olUBFRBqzMmEfov0-ufEzYfIEiqevlbdDREGo">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #f59e0b; 
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- ÜST MENÜ (NAVBAR) --- */
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .logo-area img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-color);
+        }
+
+        .lang-select {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            outline: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .lang-select:focus {
+            border-color: var(--accent-color);
+        }
+
+        /* --- FORUM ALANI --- */
+        .main-content {
+            max-width: 1200px;
+            margin: 100px auto 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* --- GİRİŞ PANELİ --- */
+        .auth-box {
+            background: var(--card-bg);
+            max-width: 400px;
+            margin: 5rem auto;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .auth-btn {
+            background-color: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+            transition: opacity 0.3s;
+        }
+
+        .auth-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* --- AÇILIR CANLI CHAT PENCERESİ --- */
+        .chat-toggle-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background-color: var(--accent-color);
+            color: #000;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: none; 
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+            z-index: 9999;
+            border: none;
+            transition: transform 0.2s;
+        }
+
+        .chat-toggle-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .chat-container {
+            position: fixed;
+            bottom: 95px;
+            right: 25px;
+            width: 360px;
+            height: 480px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: none; 
+            flex-direction: column;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: #111827;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .chat-header h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-header h4 i {
+            color: var(--accent-color);
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .msg-bubble {
+            background-color: var(--bg-color);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            max-width: 85%;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .msg-user {
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: var(--accent-color);
+            margin-bottom: 2px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            padding: 0.75rem;
+            background-color: #111827;
+            border-top: 1px solid var(--border-color);
+            gap: 8px;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .chat-input-area button {
+            background-color: var(--accent-color);
+            border: none;
+            color: #000;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        @media (max-width: 480px) {
+            .chat-container {
+                width: calc(100% - 50px);
+                right: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="#" class="logo-area">
+                <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/beee0e21-2922-47e1-b70f-001dd1ad0a17/dk5gtc4-d244edf7-b16e-43e8-b2bf-620f18ac998a.jpg/v1/fill/w_883,h_905,q_70,strp/kurden_nasyonalist_logo_by_pictureacc235_dk5gtc4-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9OTg1IiwicGF0aCI6Ii9mL2JlZWUwZTIxLTI5MjItNDdlMS1iNzBmLTAwMWRkMWFkMGExNy9kazVndGM0LWQyNDRlZGY3LWIxNmUtNDNlOC1iMmJmLTYyMGYxOGFjOTk4YS5qcGciLCJ3aWR0aCI6Ijw9OTYwIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.JBlSb1olUBFRBqzMmEfov0-ufEzYfIEiqevlbdDREGo" alt="Logo">
+                <span>Kurd Forum</span>
+            </a>
+            
+            <select class="lang-select" id="langSelect">
+                <option value="ku">Kurdî</option>
+                <option value="tr" selected>Türkçe</option>
+                <option value="en">English</option>
+            </select>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="auth-box" id="authBox">
+            <input type="text" id="usernameInput" placeholder="Kullanıcı Adı Yazın" style="width:100%; padding:0.5rem; border-radius:6px; border:1px solid var(--border-color); background:#0f172a; color:#fff; outline:none;">
+            <button class="auth-btn" onclick="simulateLogin()">Giriş Yap</button>
+        </div>
+    </main>
+
+    <button class="chat-toggle-btn" id="chatToggle" onclick="toggleChat()">
+        <i class="fa-regular fa-comment-dots"></i>
+    </button>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <h4><i class="fa-solid fa-circle"></i> Canlı Sohbet</h4>
+            <button class="chat-close" onclick="toggleChat()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Mesajınızı yazın..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Gönder</button>
+        </div>
+    </div>
+
+    <script>
+        // --- FIREBASE BAĞLANTISI ---
+        const firebaseConfig = {
+            databaseURL: "https://kurd-352da-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const chatRef = database.ref("messages");
+
+        let currentUser = "";
+
+        // --- GİRİŞ İŞLEMİ ---
+        function simulateLogin() {
+            const userInput = document.getElementById("usernameInput").value.trim();
+            if(userInput === "") return;
+            currentUser = userInput;
+            
+            document.getElementById("authBox").style.display = "none";
+            document.getElementById("chatToggle").style.display = "flex";
+            
+            listenMessages();
+        }
+
+        // --- CHAT PENCERESİ AÇ / KAPAT ---
+        function toggleChat() {
+            const chatWin = document.getElementById("chatContainer");
+            if(chatWin.style.display === "flex") {
+                chatWin.style.display = "none";
+            } else {
+                chatWin.style.display = "flex";
+                scrollToBottom();
+            }
+        }
+
+        // --- MESAJ GÖNDERME ---
+        function sendMessage() {
+            const input = document.getElementById("chatInput");
+            const messageText = input.value.trim();
+            if(messageText === "") return;
+
+            chatRef.push({
+                username: currentUser,
+                text: messageText,
+                timestamp: Date.now()
+            });
+
+            input.value = "";
+        }
+
+        function handleKeyPress(e) {
+            if(e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // --- MESAJLARI ANLIK DİNLEME ---
+        function listenMessages() {
+            chatRef.limitToLast(50).on("child_added", (snapshot) => {
+                const data = snapshot.val();
+                const msgBox = document.getElementById("chatMessages");
+                
+                const bubble = document.createElement("div");
+                bubble.classList.add("msg-bubble");
+                bubble.innerHTML = `
+                    <div class="msg-user">${escapeHTML(data.username)}</div>
+                    <div>${escapeHTML(data.text)}</div>
+                `;
+                
+                msgBox.appendChild(bubble);
+                scrollToBottom();
+            });
+        }
+
+        function scrollToBottom() {
+            const msgBox = document.getElementById("chatMessages");
+            msgBox.scrollTop = msgBox.scrollHeight;
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
