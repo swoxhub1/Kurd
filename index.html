@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ku">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurdên Nasyonalist Forum</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white font-sans min-h-screen p-8">
+    <div class="max-w-4xl mx-auto space-y-6">
+        <div class="border-b border-slate-800 pb-4 flex justify-between items-center">
+            <h1 class="text-3xl font-extrabold text-yellow-500 tracking-wide">FORUMA NASYONALISTÊN KURD</h1>
+            <select id="globalLang" class="bg-slate-800 text-sm p-2 rounded text-white border border-slate-700">
+                <option value="ku">📯 Kurmancî</option>
+                <option value="zza">📯 Kirmanckî</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="en">🇬🇧 English</option>
+            </select>
+        </div>
+
+        <blockquote class="bg-yellow-500/10 border-l-4 border-yellow-500 p-4 rounded text-sm text-yellow-300">
+            Hata mesajları, Kurucu unvan korumaları ve profil/forum arama algoritmaları seçilen dile göre dinamik çalışır. Sitede işlem yapabilmek için kayıt olurken Kurucu gizli kodunu kullanabilir veya doğrulama panelini tetikleyebilirsiniz.
+        </blockquote>
+
+        <div class="bg-slate-900 p-6 rounded-lg border border-slate-800 space-y-4">
+            <h2 class="text-xl font-bold text-slate-300">🔍 Gelişmiş Filtreli Arama Motoru</h2>
+            <div class="flex gap-2">
+                <input id="searchQuery" type="text" placeholder="Profil ismi, unvan veya forum içeriği yazın..." class="w-full bg-slate-950 p-3 rounded border border-slate-700 text-sm focus:outline-none focus:border-yellow-500">
+                <select id="searchType" class="bg-slate-800 p-3 rounded text-sm">
+                    <option value="forum">Forum İçeriği</option>
+                    <option value="user">Profil / Unvan</option>
+                </select>
+                <button onclick="executeSearch()" class="bg-yellow-600 hover:bg-yellow-700 font-bold px-6 py-3 rounded text-sm transition">Ara</button>
+            </div>
+            <div id="searchResults" class="text-sm text-slate-400 space-y-2"></div>
+        </div>
+    </div>
+
+    <script>
+        async function executeSearch() {
+            const q = document.getElementById('searchQuery').value;
+            const type = document.getElementById('searchType').value;
+            const lang = document.getElementById('globalLang').value;
+            const resBox = document.getElementById('searchResults');
+            
+            resBox.innerHTML = "Lêgerîn tê kirin / Aranıyor...";
+            
+            const response = await fetch(`/api/search?q=${q}&type=${type}&filterLang=${lang}`, {
+                headers: { 'Accept-Language': lang }
+            });
+            const data = await response.json();
+            resBox.innerHTML = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "kurden-nationalist-forum",
+  "version": "1.0.0",
+  "description": "Netlify Çok Dilli Serverless Forum Projesi",
+  "main": "netlify/functions/api.js",
+  "scripts": {
+    "start": "netlify dev"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.2.0",
+    "serverless-http": "^3.2.0"
+  }
+}
